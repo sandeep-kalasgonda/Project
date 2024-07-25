@@ -4,8 +4,8 @@ import com.example.Project.entity.Appointment;
 import com.example.Project.repository.AppointmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,7 +31,7 @@ public class AppointmentService {
     appointmentRepository.deleteById(id);
   }
 
-  public List<Appointment> getAppointmentsByDate(Date date) {
+  public List<Appointment> getAppointmentsByDate(LocalDate date) {
     return appointmentRepository.findByAppointmentDate(date);
   }
 }
