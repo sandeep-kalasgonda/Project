@@ -1,112 +1,121 @@
-$(document).ready(function() {
-    // Fetch all appointments on page load
+document.addEventListener("DOMContentLoaded", function() {
+    const appointmentForm = document.getElementById('appointmentForm');
+    const filterButton = document.getElementById('filterButton');
+    const appointmentTableBody = document.getElementById('appointmentTableBody');
+    const appointmentCount = document.getElementById('appointmentCount');
+    const successMessage = document.getElementById('successMessage');
+
+    // Load all appointments initially
     fetchAppointments();
-  
-    // Handle form submission for adding new appointment
-    $('#appointmentForm').on('submit', function(e) {
-      e.preventDefault();
-  
-      const appointment = {
-        customerName: $('#customerName').val(),
-        appointmentDate: $('#appointmentDate').val(),
-        description: $('#description').val()
-      };
-  
-      axios.post('/appointments', appointment)
-        .then(() => {
-          $('#successMessage').show();
-          fetchAppointments();
-          $('#customerName').val('');
-          $('#appointmentDate').val('');
-          $('#description').val('');
+
+    appointmentForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const customerName = document.getElementById('customerName').value;
+        const appointmentDate = document.getElementById('appointmentDate').value;
+        const description = document.getElementById('description').value;
+
+        axios.post('/appointments', {
+            customerName,
+            appointmentDate,
+            description
         })
-        .catch(error => console.error('Error adding appointment:', error));
-    });
-  
-    // Handle filter button click
-    $('#filterButton').on('click', function() {
-      const filterDate = $('#filterDate').val();
-      if (filterDate) {
-        fetchAppointments(filterDate);
-      } else {
-        alert('Please select a date to filter.');
-      }
-    });
-  
-    // Function to fetch appointments
-    function fetchAppointments(filterDate = '') {
-      let url = '/appointments';
-      if (filterDate) {
-        url += `/filter?date=${encodeURIComponent(filterDate)}`;
-      }
-  
-      axios.get(url)
         .then(response => {
-          const appointments = response.data;
-          $('#appointmentTableBody').empty();
-          let appointmentCount = 0;
-  
-          appointments.forEach(appointment => {
-            $('#appointmentTableBody').append(`
-              <tr>
+            successMessage.style.display = 'block';
+            fetchAppointments();  // Refresh the list
+            appointmentForm.reset();
+        })
+        .catch(error => {
+            console.error('There was an error adding the appointment!', error);
+        });
+    });
+
+    filterButton.addEventListener('click', function() {
+        const filterDate = document.getElementById('filterDate').value;
+
+        axios.get(`/appointments/filter?date=${filterDate}`)
+        .then(response => {
+            const appointments = response.data;
+            updateAppointmentTable(appointments);
+        })
+        .catch(error => {
+            console.error('There was an error filtering the appointments!', error);
+        });
+    });
+
+    function fetchAppointments() {
+        axios.get('/appointments')
+        .then(response => {
+            const appointments = response.data;
+            updateAppointmentTable(appointments);
+        })
+        .catch(error => {
+            console.error('There was an error fetching the appointments!', error);
+        });
+    }
+
+    function updateAppointmentTable(appointments) {
+        appointmentTableBody.innerHTML = '';
+        appointments.forEach(appointment => {
+            const row = `<tr>
                 <td>${appointment.id}</td>
                 <td>${appointment.customerName}</td>
                 <td>${appointment.appointmentDate}</td>
                 <td>${appointment.description}</td>
                 <td>
-                  <button class="btn btn-danger delete-btn" data-id="${appointment.id}">Delete</button>
-                  <button class="btn btn-info edit-btn" data-id="${appointment.id}">Edit</button>
+                    <button class="btn btn-info btn-sm" onclick="editAppointment(${appointment.id})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteAppointment(${appointment.id})">Delete</button>
                 </td>
-              </tr>
-            `);
-            appointmentCount++;
-          });
-  
-          $('#appointmentCount').text(`Number of appointments on ${filterDate}: ${appointmentCount}`);
-        })
-        .catch(error => console.error('Error fetching appointments:', error));
+            </tr>`;
+            appointmentTableBody.innerHTML += row;
+        });
+        appointmentCount.innerText = `Total appointments: ${appointments.length}`;
     }
-  
-    // Handle delete button click
-    $(document).on('click', '.delete-btn', function() {
-      const id = $(this).data('id');
-      axios.delete(`/appointments/${id}`)
-        .then(() => fetchAppointments())
-        .catch(error => console.error('Error deleting appointment:', error));
-    });
-  
-    // Handle edit button click (show modal and populate fields)
-    $(document).on('click', '.edit-btn', function() {
-      const id = $(this).data('id');
-      axios.get(`/appointments/${id}`)
+
+    window.editAppointment = function(id) {
+        axios.get(`/appointments/${id}`)
         .then(response => {
-          const appointment = response.data;
-          $('#editCustomerName').val(appointment.customerName);
-          $('#editAppointmentDate').val(appointment.appointmentDate);
-          $('#editDescription').val(appointment.description);
-          $('#editAppointmentForm').data('id', id);
-          $('#editAppointmentModal').modal('show');
+            const appointment = response.data;
+            document.getElementById('editAppointmentId').value = appointment.id;
+            document.getElementById('editCustomerName').value = appointment.customerName;
+            document.getElementById('editAppointmentDate').value = appointment.appointmentDate;
+            document.getElementById('editDescription').value = appointment.description;
+            $('#editAppointmentModal').modal('show');
         })
-        .catch(error => console.error('Error fetching appointment for edit:', error));
-    });
-  
-    // Handle form submission for editing an appointment
-    $('#editAppointmentForm').on('submit', function(e) {
-      e.preventDefault();
-  
-      const id = $(this).data('id');
-      const appointment = {
-        customerName: $('#editCustomerName').val(),
-        appointmentDate: $('#editAppointmentDate').val(),
-        description: $('#editDescription').val()
-      };
-  
-      axios.put(`/appointments/${id}`, appointment)
-        .then(() => {
-          $('#editAppointmentModal').modal('hide');
-          fetchAppointments();
+        .catch(error => {
+            console.error('There was an error fetching the appointment details!', error);
+        });
+    }
+
+    document.getElementById('editAppointmentForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const id = document.getElementById('editAppointmentId').value;
+        const customerName = document.getElementById('editCustomerName').value;
+        const appointmentDate = document.getElementById('editAppointmentDate').value;
+        const description = document.getElementById('editDescription').value;
+
+        axios.put(`/appointments/${id}`, {
+            customerName,
+            appointmentDate,
+            description
         })
-        .catch(error => console.error('Error updating appointment:', error));
+        .then(response => {
+            $('#editAppointmentModal').modal('hide');
+            fetchAppointments();  // Refresh the list
+        })
+        .catch(error => {
+            console.error('There was an error updating the appointment!', error);
+        });
     });
-  });
-  
+
+    window.deleteAppointment = function(id) {
+        if (confirm('Are you sure you want to delete this appointment?')) {
+            axios.delete(`/appointments/${id}`)
+            .then(() => {
+                fetchAppointments();  // Refresh the list
+            })
+            .catch(error => {
+                console.error('There was an error deleting the appointment!', error);
+            });
+        }
+    }
+});

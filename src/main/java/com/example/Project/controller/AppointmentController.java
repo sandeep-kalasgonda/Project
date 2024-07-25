@@ -3,7 +3,6 @@ package com.example.Project.controller;
 import com.example.Project.entity.Appointment;
 import com.example.Project.service.AppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -47,8 +46,7 @@ public class AppointmentController {
     }
 
     @GetMapping("/filter")
-    public List<Appointment> filterAppointmentsByDate(
-            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+    public List<Appointment> filterAppointmentsByDate(@RequestParam LocalDate date) {
         return appointmentService.getAppointmentsByDate(date);
     }
 }

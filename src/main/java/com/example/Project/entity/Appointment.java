@@ -5,7 +5,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Entity
 public class Appointment {
@@ -14,7 +14,7 @@ public class Appointment {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
   private String customerName;
-  private Date appointmentDate;
+  private LocalDate appointmentDate;
   private String description;
 
   // Getters and Setters
@@ -35,11 +35,11 @@ public class Appointment {
     this.customerName = customerName;
   }
 
-  public Date getAppointmentDate() {
+  public LocalDate getAppointmentDate() {
     return appointmentDate;
   }
 
-  public void setAppointmentDate(Date appointmentDate) {
+  public void setAppointmentDate(LocalDate appointmentDate) {
     this.appointmentDate = appointmentDate;
   }
 
