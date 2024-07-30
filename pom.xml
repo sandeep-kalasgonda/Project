@@ -11,7 +11,7 @@
 	<groupId>com.example</groupId>
 	<artifactId>Project</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Task1</name>
+	<name>Project</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>
